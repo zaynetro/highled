@@ -2,6 +2,8 @@
 
 Helps manage ledger file with ease.
 
+[Ledger](http://www.ledger-cli.org/) needs to be installed beforehand.
+
 
 ## Download
 
