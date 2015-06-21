@@ -92,7 +92,7 @@ init_dataset() {
 	echo "  (see more: http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up)"
 	echo
 	echo "Edit dataset with nano or with your favourite editor:"
-	echo "  nano ./highled/current.ldg"
+	echo "  nano .highled/current.ldg"
 }
 
 init_db() {
