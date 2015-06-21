@@ -5,7 +5,7 @@ Helps manage ledger file with ease.
 
 ## Download
 
-* `curl -o https://raw.githubusercontent.com/zaynetro/highled/master/highled.sh`
+* `curl https://raw.githubusercontent.com/zaynetro/highled/master/highled.sh > highled.sh && chmod 755 highled.sh`
 
 
 ## Usage
