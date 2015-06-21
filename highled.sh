@@ -156,8 +156,8 @@ set_alias() {
 		exit 1
 	fi
 
-	rm_alias $KEY
-	echo "$KEY=$VALUE" >> $CONFIG_FILE
+	rm_alias $key
+	echo "$key=$value" >> $CONFIG_FILE
 }
 
 pay() {
