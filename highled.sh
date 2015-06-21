@@ -156,7 +156,7 @@ set_alias() {
 		exit 1
 	fi
 
-	rm_default $KEY
+	rm_alias $KEY
 	echo "$KEY=$VALUE" >> $CONFIG_FILE
 }
 
