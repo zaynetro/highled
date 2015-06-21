@@ -1,5 +1,7 @@
 #!/bin/bash
 
+{
+
 DB_DIR=./.highled
 CONFIG_FILE=$DB_DIR/config
 DB_DATAFILE=$DB_DIR/current.ldg
@@ -324,3 +326,5 @@ case $1 in
 		print_usage
 		exit
 esac
+
+}
