@@ -271,7 +271,7 @@ undo_last() {
 	if [[ $PLATFORM == "darwin" ]]; then
 		lines=`tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r | wc -l`
 	elif [[ $PLATFORM == "linux" ]]; then
-		lines=`cat $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | cat | wc -l`
+		lines=`tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac | wc -l`
 	else
 		echo "Your platform is not supported yet."
 		exit 1
