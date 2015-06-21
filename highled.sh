@@ -112,7 +112,13 @@ flush_db() {
 
 rm_alias() {
 	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
-	sed -i '' -e /^$key=/d $CONFIG_FILE
+	if [[ $PLATFORM == "darwin" ]]; then
+		sed -i '' -e /^$key=/d $CONFIG_FILE
+	elif [[ $PLATFORM == "linux" ]]; then
+		sed -i /^$key=/d $CONFIG_FILE
+	else
+		echo "Your platform is not supported yet."
+	fi
 }
 
 get_alias() {
@@ -270,9 +276,14 @@ undo_last() {
 		echo "Your platform is not supported yet."
 		exit 1
 	fi
+
 	local i="0"
 	while [ $i -lt $lines ]; do
-		sed -i '' -e '$ d' $DB_DATAFILE
+		if [[ $PLATFORM == "darwin" ]]; then
+			sed -i '' -e '$ d' $DB_DATAFILE
+		elif [[ $PLATFORM == "linux" ]]; then
+			sed -i '$ d' $DB_DATAFILE
+		fi
 		i=$[$i+1]
 	done
 }
