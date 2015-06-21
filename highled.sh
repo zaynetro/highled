@@ -6,15 +6,15 @@ DB_DIR=./.highled
 CONFIG_FILE=$DB_DIR/config
 DB_DATAFILE=$DB_DIR/current.ldg
 
-# case $OSTYPE in
-# 	"darwin"*)
-# 		PLATFORM="darwin"
-# 		;;
+case $OSTYPE in
+	"darwin"*)
+		PLATFORM="darwin"
+		;;
 
-# 	"linux-gnu")
-# 		PLATFORM="linux"
-# 		;;
-# esac
+	"linux-gnu")
+		PLATFORM="linux"
+		;;
+esac
 
 print_usage() {
 	read -r -d '' output << EOM
@@ -110,6 +110,11 @@ flush_db() {
 	fi
 }
 
+rm_alias() {
+	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
+	sed -i '' -e /^$key=/d $CONFIG_FILE
+}
+
 get_alias() {
 	if [ ! -r $CONFIG_FILE ]; then
 		return 0
@@ -147,11 +152,6 @@ set_alias() {
 
 	rm_default $KEY
 	echo "$KEY=$VALUE" >> $CONFIG_FILE
-}
-
-rm_alias() {
-	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
-	sed -i '' -e /^$key=/d $CONFIG_FILE
 }
 
 pay() {
@@ -250,11 +250,26 @@ pay() {
 }
 
 show_last() {
-	tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r
+	if [[ $PLATFORM == "darwin" ]]; then
+		tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r
+	elif [[ $PLATFORM == "linux" ]]; then
+		tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac
+	else
+		echo "Your platform is not supported yet."
+		exit 1
+	fi
 }
 
 undo_last() {
-	local lines=`tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r | wc -l`
+	local lines
+	if [[ $PLATFORM == "darwin" ]]; then
+		lines=`tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r | wc -l`
+	elif [[ $PLATFORM == "linux" ]]; then
+		lines=`cat $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | cat | wc -l`
+	else
+		echo "Your platform is not supported yet."
+		exit 1
+	fi
 	local i="0"
 	while [ $i -lt $lines ]; do
 		sed -i '' -e '$ d' $DB_DATAFILE
