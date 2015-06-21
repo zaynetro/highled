@@ -44,17 +44,19 @@ Examples:
 
 ## Aliases
 
-When you specified an alias highled with try to find it for every user input. When your input matches an alias it will be changed to the value you defined when configuring alias.
+`Highled` will try to find mathing alias value for every user input. When your input matches an alias it will be changed to the value you defined when configuring alias.
 
 ## Currency
 
 ### Default
 
-Highled will try to use default currency for every input which is lacking currency. You can specify default currency by creating set `DEFAULT_CURRENCY` alias to the value you need. Or manually by modifying configuration file (use `highled print` to see file location).
+`Highled` will try to use default currency for every input which lacks currency. You can specify default currency by setting `DEFAULT_CURRENCY` alias to the value you need (`highled set-alias DEFAULT_CURRENCY GBP`). Or manually by modifying configuration file (use `highled print` to see file location).
 
 ### Specify
 
-The other way is to specify currency every time you input a value (eg: `highled pay 10.10EUR for Food with cash`). **NOTE:** Currently script understands currency which follow the payment amount, not those that stand before such as dollar sign ($10.10 doesn't work).
+The other way is to specify currency every time you input a value (eg: `highled pay 10.10EUR for Food with cash`).
+
+**NOTE:** Currently script understands currency which follows the payment amount, not those that stand before such as dollar sign ($10.10 doesn't work).
 
 
 ## Basic reporting
