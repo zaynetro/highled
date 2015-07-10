@@ -2,6 +2,7 @@
 
 {
 
+VERSION="0.1.0"
 YEAR=`date "+%Y"`
 DB_DIR=./.highled
 CONFIG_FILE="$DB_DIR/config"
@@ -33,6 +34,7 @@ Usage:
   highled show-alias <k>       Print alias value for the key <k>, if <k> omitted print all
   highled exec <options>       Execute ledger with highled balance file and <options>
   highled print                Print dataset and config file locations
+  highled {version|-v|-V}      Print highled version
 
 Payment:
  highled pay [flags] [<amount> for <expense>] with <what> [<date>] [-d <description>]
@@ -423,6 +425,10 @@ case $1 in
 		echo -e "Dataset:\t$DB_DATAFILE"
 		echo -e "Configuration:\t$CONFIG_FILE"
 		;;
+
+  "version"|"-v"|"-V")
+    echo "highled v$VERSION"
+    ;;
 
 	*)
 		print_usage
