@@ -77,14 +77,24 @@ TO BE DONE
 ## TO DO
 
 * More clever payment command
-  * Understand multiple expenses within one transaction
-  * Understand multiple payment methods within one transaction
+  * <s>Understand multiple expenses within one transaction</s>
   * Provide `--no-alias` flag
-  * Transaction confirmation
+  * <s>Transaction confirmation</s>
 * Income command
+  * Calls payment method
+* Withdraw command
+  * **Just call payment method** with specific arguments
+  * <s>Basic functionality</s>
+  * Flag support
+  * Date support
+  * Description support
 * Automatically transfer to new balance sheet each year
 * Basic reporting
+  * Provide examples of ledger reporting?
 * Simple visualisation for expense categories
+  * Host simple web-server and host graphs?
+  * Electron application?
+  * Use d3.js or similar lib
 
 ## License
 
