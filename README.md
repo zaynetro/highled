@@ -68,9 +68,9 @@ TO BE DONE
 ## TO DO
 
 * More clever payment command
-    ** Understand multiple expenses within one transaction
-    ** Understand multiple payment methods within one transaction
-    ** Provide `--no-alias` flag
+  * Understand multiple expenses within one transaction
+  * Understand multiple payment methods within one transaction
+  * Provide `--no-alias` flag  
 * Automatically transfer to new balance sheet each year
 * Basic reporting
 * Simple visualisation for expense categories
