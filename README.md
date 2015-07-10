@@ -24,7 +24,7 @@ Usage:
   highled set-alias <k> <v>    Set alias value <v> for the key <k>
   highled rm-alias <k>         Remove alias for the key <k>
   highled show-alias <k>       Print alias value for the key <k>, if <k> omitted print all
-  highled exec <options>       Execute ledger with specified dataset file and <options>
+  highled exec <options>       Execute ledger with highled balance file and <options>
   highled print                Print dataset and config file locations
 
 Payment:
@@ -70,7 +70,9 @@ TO BE DONE
 * More clever payment command
   * Understand multiple expenses within one transaction
   * Understand multiple payment methods within one transaction
-  * Provide `--no-alias` flag  
+  * Provide `--no-alias` flag
+  * Transaction confirmation
+* Income command
 * Automatically transfer to new balance sheet each year
 * Basic reporting
 * Simple visualisation for expense categories
