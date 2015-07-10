@@ -162,11 +162,44 @@ set_alias() {
 }
 
 pay() {
+  # OLD
 	# Usage:   ./highled pay <amount> for <expense> with <what> [<date>] [-d <description>]
 	# Example: ./highled pay 10 for Lunch with Visa
 
-	local usage="Usage: ./highled pay <amount> for <expense> with <what> [<date>] [-d <description>]"
-	local amount_with_currency=$1
+  # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]
+  # Example: highled pay -y 10 for Lunch with visa yesterday
+
+	local usage="Usage: .highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]"
+	local autoconfirm
+  local noalias
+
+  # Parse flags
+  while [[ $# -gt 0 ]]; do
+    local flag=$1
+
+    case $flag in
+      "-y")
+        autoconfirm="true"
+        shift
+        ;;
+
+      "-nas"|"--no-alias")
+        noalias="true"
+        shift
+        ;;
+    esac
+  done
+
+  # Parse expenses
+  while [[ $# -gt 0 ]]; do
+    local amount=$1
+    shift
+
+
+    
+  done
+  
+  local amount_with_currency=$1
 	local amount=${amount_with_currency//[^0-9.,]/}
 	local currency=${amount_with_currency//[0-9.,]/}
 	
