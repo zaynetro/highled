@@ -169,7 +169,7 @@ pay() {
   # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]
   # Example: highled pay -y 10 for Lunch with visa yesterday
 
-	local usage="Usage: .highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]"
+	local usage="Usage: highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]"
 	local autoconfirm
   local noalias
 
@@ -187,56 +187,86 @@ pay() {
         noalias="true"
         shift
         ;;
+      
+      *)
+        break
+        ;;
     esac
   done
 
   # Parse expenses
+  local amounts=()
+  local expenses=()
   while [[ $# -gt 0 ]]; do
-    local amount=$1
-    shift
-
-
     
+    if [[ $1 == "with" ]]; then
+      break
+    fi
+
+    if [[ $2 != "for" ]]; then
+      echo "Missing \"for\""
+      echo $usage
+      exit 1
+    fi
+  
+    local resolved_amount=""
+    local resolved_expense=""
+
+    local amount_with_currency=$1
+	  local amount=${amount_with_currency//[^0-9.,]/}
+	  local currency=${amount_with_currency//[0-9.,]/}
+    if [[ -z $amount ]]; then
+      echo "Specify payment amount."
+      echo $usage
+      exit 1
+    fi	
+
+    if [[ -z $currency ]]; then
+      get_alias "DEFAULT_CURRENCY" currency
+    fi
+    
+    local expense=$3 
+
+    get_alias $amount resolved_amount
+	  get_alias $expense resolved_expense
+
+	  local amount=${resolved_amount:=$amount}
+	  local expense=${resolved_expense:=$expense}
+
+    amounts+=("$amount $currency")
+    expenses+=($expense)
+
+    shift
+    shift
+    shift
   done
   
-  local amount_with_currency=$1
-	local amount=${amount_with_currency//[^0-9.,]/}
-	local currency=${amount_with_currency//[0-9.,]/}
-	
-	if [[ -z $amount ]]; then
-		echo "Specify payment amount."
-		echo $usage
-		exit 1
-	fi	
+  if [[ $1 != "with" ]]; then
+    echo "Missing\"with\""
+    echo $usage
+    exit 1
+  fi
+  
+  shift
 
-	if [[ -z $currency ]]; then
-		get_alias "DEFAULT_CURRENCY" currency
-	fi
+  if [[ $# -eq 0 ]]; then
+    echo "Specify payment method"
+    echo $usage
+    exit 1
+  fi
 
-	local pay_for
-	local pay_with
+  # echo "autoconfirm=$autoconfirm"
+  # echo "noalias=$noalias"
+  
+	local pay_with=$1
+  shift
 	local when=`date "+%Y/%m/%d"`
 	local description
 
-	local processed="0"
-
-	shift
 	while [[ $# -gt 0 ]]; do
 		local key=$1
 
 		case $key in
-			"for")
-				processed=$[$processed+1]
-				pay_for=$2
-				shift
-				;;
-
-			"with")
-				processed=$[$processed+1]
-				pay_with=$2
-				shift
-				;;
-
 			-d|--description)
 				description=$2
 				shift
@@ -259,33 +289,52 @@ pay() {
 		shift
 	done
 
-	if [[ $processed -lt "2" ]]; then
-		echo "Payment amount, expense name and payment method are required."
-		echo $usage
-		exit 1
-	fi
-
-	get_alias $amount resolved_amount
-	get_alias $pay_for resolved_pay_for
 	get_alias $pay_with resolved_pay_with
 	get_alias $description resolved_description
 
-	amount=${resolved_amount:=$amount}
-	pay_for=${resolved_pay_for:=$pay_for}
 	pay_with=${resolved_pay_with:=$pay_with}
 	description=${resolved_description:=$description}
 
-	if [[ -z $description ]]; then
-		description="$pay_for purchase with ${pay_with##*:}"
-	fi
+	#if [[ -z $description ]]; then
+	#	description="Purchase with ${pay_with##*:}"
+	#fi
+
+  local total="${#amounts[*]}"
+  local expenselines=()
+  local autodescription
+
+  for (( i=0; i<=$(( $total -1 )); i++ )); do
+    local expense=${expenses[$i]}
+    expenselines+=("Expenses:$expense\t\t${amounts[$i]}")
+    autodescription+="${expense##*:}, "
+  done
+
+  autodescription="${autodescription%??} purchase with ${pay_with##*:}"
+  description=${autodescription:=$description}
 
 	echo -e "$when  $description"
-	echo -e "  Expenses:$pay_for\t$amount $currency" 
+  for line in "${expenselines[@]}"; do
+    echo -e "  $line"
+  done
 	echo -e "  $pay_with"
+
+  if [[ $autoconfirm != "true" ]]; then
+    read -p "Confirm? (y/n):" yn
+    case $yn in
+      [Yy])
+        ;;
+
+      *)
+        echo "Cancelling..."
+        exit
+    esac
+  fi
 
 	echo >> $DB_DATAFILE
 	echo -e "$when  $description" >> $DB_DATAFILE
-	echo -e "  Expenses:$pay_for\t$amount $currency" >> $DB_DATAFILE
+  for line in "${expenselines[@]}"; do
+    echo -e "  $line" >> $DB_DATAFILE
+  done
 	echo -e "  $pay_with" >> $DB_DATAFILE
 }
 
