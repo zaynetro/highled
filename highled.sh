@@ -29,6 +29,7 @@ Usage:
   highled pay <options>        Make a payment transaction (see detailed description below)
   highled last                 Print last transaction
   highled undo                 Remove last transaction
+  highled withdraw <options>   Withdraw money from bank card (see below)
   highled set-alias <k> <v>    Set alias value <v> for the key <k>
   highled rm-alias <k>         Remove alias for the key <k>
   highled show-alias <k>       Print alias value for the key <k>, if <k> omitted print all
@@ -42,6 +43,10 @@ Payment:
    -y             Auto-confirm transaction
    --no-alias     Don't try to resolve aliases
    -nas           Shorthand for --no-alias
+
+Withdrawal:
+ highled withdraw [flags] <amount> from <where> [<date>] [-d <description>]
+ Flags: (the same as for payment)
 
 Examples:
   $ highled pay 11.50 for Lunch with visa
