@@ -35,7 +35,11 @@ Usage:
   highled print                Print dataset and config file locations
 
 Payment:
- highled pay <amount> for <expense> with <what> [<date>] [-d <description>]
+ highled pay [flags] [<amount> for <expense>] with <what> [<date>] [-d <description>]
+ Flags:
+   -y             Auto-confirm transaction
+   --no-alias     Don't try to resolve aliases
+   -nas           Shorthand for --no-alias
 
 Examples:
   $ highled pay 11.50 for Lunch with visa
@@ -162,14 +166,10 @@ set_alias() {
 }
 
 pay() {
-  # OLD
-	# Usage:   ./highled pay <amount> for <expense> with <what> [<date>] [-d <description>]
-	# Example: ./highled pay 10 for Lunch with Visa
-
-  # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]
+  # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]
   # Example: highled pay -y 10 for Lunch with visa yesterday
 
-	local usage="Usage: highled pay [<flags>] [<amount> for <expense>] with <what> [<date> [-d <description>]"
+	local usage="Usage: highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]"
 	local autoconfirm
   local noalias
 
@@ -255,9 +255,6 @@ pay() {
     exit 1
   fi
 
-  # echo "autoconfirm=$autoconfirm"
-  # echo "noalias=$noalias"
-  
 	local pay_with=$1
   shift
 	local when=`date "+%Y/%m/%d"`
@@ -294,10 +291,6 @@ pay() {
 
 	pay_with=${resolved_pay_with:=$pay_with}
 	description=${resolved_description:=$description}
-
-	#if [[ -z $description ]]; then
-	#	description="Purchase with ${pay_with##*:}"
-	#fi
 
   local total="${#amounts[*]}"
   local expenselines=()
