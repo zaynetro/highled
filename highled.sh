@@ -2,9 +2,10 @@
 
 {
 
+YEAR=`date "+%Y"`
 DB_DIR=./.highled
-CONFIG_FILE=$DB_DIR/config
-DB_DATAFILE=$DB_DIR/current.ldg
+CONFIG_FILE="$DB_DIR/config"
+DB_DATAFILE="$DB_DIR/$YEAR-balance.ldg"
 
 case $OSTYPE in
 	"darwin"*)
@@ -78,21 +79,21 @@ init_dataset() {
 	echo "; See more http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up" >> $DB_DATAFILE
 	echo >> $DB_DATAFILE
 	echo -e "; 2015/06/21  Opening Balance" >> $DB_DATAFILE
-	echo -e ";   Assets:Checking\t\t100 EUR" >> $DB_DATAFILE
-	echo -e ";   Liabilities:Visa\t600 EUR" >> $DB_DATAFILE
+	echo -e ";   Assets:Checking     100 EUR" >> $DB_DATAFILE
+	echo -e ";   Liabilities:Visa    600 EUR" >> $DB_DATAFILE
 	echo -e ";   Equity:Opening Balances" >> $DB_DATAFILE
 
 
 	echo "Hey $USER! Your opening balance should be configred first."
 	echo
 	echo "If you have ledger file already, type:"
-	echo "  cp <path-to-your-dataset> ./highled/current.ldg"
+	echo "  cp <path-to-your-dataset> $DB_DATAFILE"
 	echo
 	echo "Create opening balance entry"
 	echo "  (see more: http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up)"
 	echo
 	echo "Edit dataset with nano or with your favourite editor:"
-	echo "  nano .highled/current.ldg"
+	echo "  vim $DB_DATAFILE"
 }
 
 init_db() {
