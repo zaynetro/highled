@@ -143,10 +143,10 @@ get_alias() {
 
 	local val=${line##$key=}
 	if [[ "$__resultvar" ]]; then
-        eval $__resultvar="'$val'"
-    else
-        echo "$val"
-    fi
+    eval $__resultvar="'$val'"
+  else
+    echo "$val"
+  fi
 }
 
 set_alias() {
@@ -165,6 +165,23 @@ set_alias() {
 
 	rm_alias $key
 	echo "$key=$value" >> $CONFIG_FILE
+}
+
+resolve_amount_with_currency() {
+  local amount_with_currency=$1
+	local amount=${amount_with_currency//[^0-9.,]/}
+	local currency=${amount_with_currency//[0-9.,]/}
+
+  get_alias "default_currency" default_currency
+  currency=${default_currency:=$currency}
+
+  local val="$amount $currency"
+	local __amount_currency=$2
+	if [[ "$__amount_currency" ]]; then
+    eval $__amount_currency="'$val'"
+  else
+    echo "$val"
+  fi
 }
 
 pay() {
@@ -211,32 +228,23 @@ pay() {
       exit 1
     fi
   
-    local resolved_amount=""
     local resolved_expense=""
+    local resolved_amount=""
 
-    local amount_with_currency=$1
-	  local amount=${amount_with_currency//[^0-9.,]/}
-	  local currency=${amount_with_currency//[0-9.,]/}
-    if [[ -z $amount ]]; then
+    resolve_amount_with_currency $1 resolved_amount
+
+    if [[ -z $resolved_amount ]]; then
       echo "Specify payment amount."
       echo $usage
       exit 1
     fi	
-
-    if [[ -z $currency ]]; then
-      get_alias "DEFAULT_CURRENCY" currency
-    fi
     
     local expense=$3 
-
-    get_alias $amount resolved_amount
 	  get_alias $expense resolved_expense
-
-	  local amount=${resolved_amount:=$amount}
 	  local expense=${resolved_expense:=$expense}
 
-    amounts+=("$amount $currency")
-    expenses+=($expense)
+    amounts+=("$resolved_amount")
+    expenses+=("$expense")
 
     shift
     shift
@@ -366,8 +374,54 @@ undo_last() {
 	done
 }
 
+# Withdraw cash from the bank card
+withdraw() {
+  local usage="Usage: highled withdraw 10 from visa"
+
+  if [[ $2 != "from" ]]; then
+    echo "Missing \"from\""
+    echo $usage
+    exit 1
+  fi
+
+  local resolved_amount=""
+  resolve_amount_with_currency $1 resolved_amount
+
+  if [[ -z $resolved_amount ]]; then
+    echo "Specify amount."
+    echo $usage
+    exit 1
+  fi
+
+  local from=$3
+  local when=`date "+%Y/%m/%d"`
+
+  get_alias $from resolved_from
+  from=${resolved_from:=$from}
+
+  echo -e "$when  ATM"
+  echo -e "  Expenses:Cash\t\t$resolved_amount"
+  echo -e "  $from"
+
+  read -p "Confirm? (y/n):" yn
+  case $yn in
+    [Yy])
+      ;;
+    *)
+      echo "Cancelling..."
+      exit
+      ;;
+  esac
+
+  echo >> $DB_DATAFILE
+  echo -e "$when  ATM" >> $DB_DATAFILE
+  echo -e "  Expenses:Cash\t\t$resolved_amount" >> $DB_DATAFILE
+  echo -e "  $from" >> $DB_DATAFILE
+}
+
 # Main
 case $1 in
+
 	"init")
 		init_db
 		;;
@@ -394,6 +448,12 @@ case $1 in
 		undo_last
 		;;
 
+  "withdraw")
+    init_db
+    shift
+    withdraw "$@"
+    ;;
+    
 	"set-alias")
 		init_db
 		shift
