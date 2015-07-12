@@ -40,7 +40,7 @@ Usage:
   highled {version|-v|-V}      Print highled version
 
 Payment:
- highled pay [flags] [<amount> for <expense>] with <what> [<date>] [-d <description>]
+ highled pay [flags] [<date>] [-d <description>]
  Flags:
    -y             Auto-confirm transaction
    --no-alias     Don't try to resolve aliases
@@ -49,17 +49,6 @@ Payment:
 Withdrawal:
  highled withdraw [flags] <amount> from <where> [<date>] [-d <description>]
  Flags: (the same as for payment)
-
-Examples:
-  $ highled pay 11.50 for Lunch with visa
-  2015/06/20  Lunch purchase with Visa
-    Expenses:Lunch	11.50 EUR
-    Liabilities:Visa
-
-  $ highled pay 34 for Food with cash yesterday -d "Chinatown dinner"
-  2015/06/19  Food:Fastfood purchase with Cash
-    Expenses:Food:Fastfood	34 EUR
-    Assets:Cash
 
 EOM
 
