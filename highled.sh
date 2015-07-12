@@ -11,17 +11,17 @@ TRANSACTION_FILE="$DB_DIR/transaction.ldg"
 DB_TMPFILE="$DB_DIR/tmp.ldg"
 
 case $OSTYPE in
-	"darwin"*)
-		PLATFORM="darwin"
-		;;
+  "darwin"*)
+    PLATFORM="darwin"
+    ;;
 
-	"linux-gnu")
-		PLATFORM="linux"
-		;;
+  "linux-gnu")
+    PLATFORM="linux"
+    ;;
 esac
 
 print_usage() {
-	read -r -d '' output << EOM
+  read -r -d '' output << EOM
 
 Highled - higher level ledger
 
@@ -52,93 +52,93 @@ Withdrawal:
 
 EOM
 
-	echo "$output" | less
+  echo "$output" | less
 }
 
 init_config() {
-	if [[ -f $CONFIG_FILE ]]; then
-		return
-	fi
+  if [[ -f $CONFIG_FILE ]]; then
+    return
+  fi
 
-	touch $CONFIG_FILE
+  touch $CONFIG_FILE
 
-	echo "# Default aliases" >> $CONFIG_FILE
-	echo "DEFAULT_CURRENCY=EUR" >> $CONFIG_FILE
-	echo "VISA=Liabilities:Visa" >> $CONFIG_FILE
-	echo "MASTERCARD=Liabilities:MasterCard" >> $CONFIG_FILE
-	echo "CASH=Assets:Cash" >> $CONFIG_FILE
+  echo "# Default aliases" >> $CONFIG_FILE
+  echo "DEFAULT_CURRENCY=EUR" >> $CONFIG_FILE
+  echo "VISA=Liabilities:Visa" >> $CONFIG_FILE
+  echo "MASTERCARD=Liabilities:MasterCard" >> $CONFIG_FILE
+  echo "CASH=Assets:Cash" >> $CONFIG_FILE
 }
 
 init_dataset() {
-	if [[ -f $DB_DATAFILE ]]; then
-		return
-	fi
+  if [[ -f $DB_DATAFILE ]]; then
+    return
+  fi
 
-	touch $DB_DATAFILE
-	echo -e "; Currenty used dataset by highled" >> $DB_DATAFILE
-	echo ";" >> $DB_DATAFILE
-	echo "; Simple opening balance entry" >> $DB_DATAFILE
-	echo "; See more http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up" >> $DB_DATAFILE
-	echo >> $DB_DATAFILE
-	echo -e "; 2015/06/21  Opening Balance" >> $DB_DATAFILE
-	echo -e ";   Assets:Checking     100 EUR" >> $DB_DATAFILE
-	echo -e ";   Liabilities:Visa    600 EUR" >> $DB_DATAFILE
-	echo -e ";   Equity:Opening Balances" >> $DB_DATAFILE
+  touch $DB_DATAFILE
+  echo -e "; Currenty used dataset by highled" >> $DB_DATAFILE
+  echo ";" >> $DB_DATAFILE
+  echo "; Simple opening balance entry" >> $DB_DATAFILE
+  echo "; See more http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up" >> $DB_DATAFILE
+  echo >> $DB_DATAFILE
+  echo -e "; 2015/06/21  Opening Balance" >> $DB_DATAFILE
+  echo -e ";   Assets:Checking     100 EUR" >> $DB_DATAFILE
+  echo -e ";   Liabilities:Visa    600 EUR" >> $DB_DATAFILE
+  echo -e ";   Equity:Opening Balances" >> $DB_DATAFILE
 
 
-	echo "Hey $USER! Your opening balance should be configred first."
-	echo
-	echo "If you have ledger file already, type:"
-	echo "  cp <path-to-your-dataset> $DB_DATAFILE"
-	echo
-	echo "Create opening balance entry"
-	echo "  (see more: http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up)"
-	echo
-	echo "Edit dataset with vim or with your favourite editor:"
-	echo "  vim $DB_DATAFILE"
+  echo "Hey $USER! Your opening balance should be configred first."
+  echo
+  echo "If you have ledger file already, type:"
+  echo "  cp <path-to-your-dataset> $DB_DATAFILE"
+  echo
+  echo "Create opening balance entry"
+  echo "  (see more: http://www.ledger-cli.org/3.0/doc/ledger3.html#Starting-up)"
+  echo
+  echo "Edit dataset with vim or with your favourite editor:"
+  echo "  vim $DB_DATAFILE"
 }
 
 init_db() {
-	if [[ ! -d $DB_DIR ]]; then
-		mkdir $DB_DIR
-	fi
+  if [[ ! -d $DB_DIR ]]; then
+    mkdir $DB_DIR
+  fi
 
-	init_config
-	init_dataset
+  init_config
+  init_dataset
 }
 
 flush_db() {
-	if [[ -d $DB_DIR ]]; then
-		rm -R $DB_DIR
-	fi
+  if [[ -d $DB_DIR ]]; then
+    rm -R $DB_DIR
+  fi
 }
 
 rm_alias() {
-	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
-	if [[ $PLATFORM == "darwin" ]]; then
-		sed -i '' -e /^$key=/d $CONFIG_FILE
-	elif [[ $PLATFORM == "linux" ]]; then
-		sed -i /^$key=/d $CONFIG_FILE
-	else
-		echo "Your platform is not supported yet."
-	fi
+  local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
+  if [[ $PLATFORM == "darwin" ]]; then
+    sed -i '' -e /^$key=/d $CONFIG_FILE
+  elif [[ $PLATFORM == "linux" ]]; then
+    sed -i /^$key=/d $CONFIG_FILE
+  else
+    echo "Your platform is not supported yet."
+  fi
 }
 
 get_alias() {
-	if [ ! -r $CONFIG_FILE ]; then
-		return 0
-	fi
+  if [ ! -r $CONFIG_FILE ]; then
+    return 0
+  fi
 
-	local __resultvar=$2
-	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
-	local line=`grep -e "^$key=" $CONFIG_FILE | head -1`
+  local __resultvar=$2
+  local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
+  local line=`grep -e "^$key=" $CONFIG_FILE | head -1`
 
-	if [[ -z $line ]]; then
-		return 0
-	fi
+  if [[ -z $line ]]; then
+    return 0
+  fi
 
-	local val=${line##$key=}
-	if [[ "$__resultvar" ]]; then
+  local val=${line##$key=}
+  if [[ "$__resultvar" ]]; then
     eval $__resultvar="'$val'"
   else
     echo "$val"
@@ -146,21 +146,21 @@ get_alias() {
 }
 
 set_alias() {
-	local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
-	# local KEY=`echo $1 | awk '{ print toupper($0) }'`
-	local value=$2
+  local key=`echo $1 | tr '[:lower:]' '[:upper:]'`
+  # local KEY=`echo $1 | awk '{ print toupper($0) }'`
+  local value=$2
 
-	if [ ! -f $CONFIG_FILE ]; then
-		init_config
-	fi
+  if [ ! -f $CONFIG_FILE ]; then
+    init_config
+  fi
 
-	if [ ! -w $CONFIG_FILE ]; then
-		echo "Configuration file is not writable"
-		exit 1
-	fi
+  if [ ! -w $CONFIG_FILE ]; then
+    echo "Configuration file is not writable"
+    exit 1
+  fi
 
-	rm_alias $key
-	echo "$key=$value" >> $CONFIG_FILE
+  rm_alias $key
+  echo "$key=$value" >> $CONFIG_FILE
 }
 
 # Resolves string with amount and currency
@@ -168,15 +168,15 @@ set_alias() {
 # appends default currency
 resolve_amount_with_currency() {
   local __amount_with_currency=$1
-	local __amount=${__amount_with_currency//[^0-9.,]/}
-	local __currency=${__amount_with_currency//[0-9., ]/}
+  local __amount=${__amount_with_currency//[^0-9.,]/}
+  local __currency=${__amount_with_currency//[0-9., ]/}
 
   get_alias "default_currency" __default_currency
   __currency=${__currency:=$__default_currency}
 
   local __val="$__amount $__currency"
-	local __amount_currency=$2
-	if [[ "$__amount_currency" ]]; then
+  local __amount_currency=$2
+  if [[ "$__amount_currency" ]]; then
     eval $__amount_currency="'$__val'"
   else
     echo "$__val"
@@ -225,7 +225,7 @@ pay() {
   local autoconfirm
   local noalias
   local description
-	local when=`date "+%Y/%m/%d"`
+  local when=`date "+%Y/%m/%d"`
 
   # Parse command
   while [[ $# -gt 0 ]]; do
@@ -246,26 +246,26 @@ pay() {
         ;;
 
       "yesterday")
-				when=`date -v-1d "+%Y/%m/%d"`
-				;;
+        when=`date -v-1d "+%Y/%m/%d"`
+        ;;
 
-			*)
-				if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
-					when=$key
-				else
-					echo "Illegal date: $key"
-					echo "Use form YYYY/MM/DD or \"yesterday\" instead"
-					exit 1
-				fi
-				;;				
+      *)
+        if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
+          when=$key
+        else
+          echo "Illegal date: $key"
+          echo "Use form YYYY/MM/DD or \"yesterday\" instead"
+          exit 1
+        fi
+        ;;        
 
     esac
  
     shift
   done
 
-	get_alias "$description" resolved_description
-	description=${resolved_description:=$description}
+  get_alias "$description" resolved_description
+  description=${resolved_description:=$description}
 
   local expenselines=()
   local autodescription
@@ -284,7 +284,7 @@ pay() {
       echo "Specify payment amount."
       echo $usage
       exit 1
-    fi	
+    fi  
 
     resolve_amount_with_currency "$amount_with_currency" resolved_amount
     resolve_expense "$expense" resolved_expense
@@ -307,11 +307,11 @@ pay() {
   autodescription="${autodescription%??} purchase with ${resolved_method##*:}"
   description=${description:=$autodescription}
 
-	echo -e "$when  $description" > $TRANSACTION_FILE
+  echo -e "$when  $description" > $TRANSACTION_FILE
   for line in "${expenselines[@]}"; do
     echo -e "  $line" >> $TRANSACTION_FILE
   done
-	echo -e "  $resolved_method" >> $TRANSACTION_FILE
+  echo -e "  $resolved_method" >> $TRANSACTION_FILE
 
   cat $TRANSACTION_FILE
 
@@ -341,8 +341,8 @@ old_pay() {
   # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]
   # Example: highled pay -y 10 for Lunch with visa yesterday
 
-	local usage="Usage: highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]"
-	local autoconfirm
+  local usage="Usage: highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]"
+  local autoconfirm
   local noalias
 
   # Parse flags
@@ -390,11 +390,11 @@ old_pay() {
       echo "Specify payment amount."
       echo $usage
       exit 1
-    fi	
+    fi  
     
     local expense=$3 
-	  get_alias $expense resolved_expense
-	  local expense=${resolved_expense:=$expense}
+    get_alias $expense resolved_expense
+    local expense=${resolved_expense:=$expense}
 
     amounts+=("$resolved_amount")
     expenses+=("$expense")
@@ -418,42 +418,42 @@ old_pay() {
     exit 1
   fi
 
-	local pay_with=$1
+  local pay_with=$1
   shift
-	local when=`date "+%Y/%m/%d"`
-	local description
+  local when=`date "+%Y/%m/%d"`
+  local description
 
-	while [[ $# -gt 0 ]]; do
-		local key=$1
+  while [[ $# -gt 0 ]]; do
+    local key=$1
 
-		case $key in
-			-d|--description)
-				description=$2
-				shift
-				;;
+    case $key in
+      -d|--description)
+        description=$2
+        shift
+        ;;
 
-			"yesterday"|"Yesterday")
-				when=`date -v-1d "+%Y/%m/%d"`
-				;;
+      "yesterday"|"Yesterday")
+        when=`date -v-1d "+%Y/%m/%d"`
+        ;;
 
-			*)
-				if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
-					when=$key
-				else
-					echo "$0 - illegal date: $key"
-					echo "Use form YYYY/MM/DD or \"yesterday\" instead"
-					exit 1
-				fi
-				;;				
-		esac
-		shift
-	done
+      *)
+        if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
+          when=$key
+        else
+          echo "$0 - illegal date: $key"
+          echo "Use form YYYY/MM/DD or \"yesterday\" instead"
+          exit 1
+        fi
+        ;;        
+    esac
+    shift
+  done
 
-	get_alias $pay_with resolved_pay_with
-	get_alias $description resolved_description
+  get_alias $pay_with resolved_pay_with
+  get_alias $description resolved_description
 
-	pay_with=${resolved_pay_with:=$pay_with}
-	description=${resolved_description:=$description}
+  pay_with=${resolved_pay_with:=$pay_with}
+  description=${resolved_description:=$description}
 
   local total="${#amounts[*]}"
   local expenselines=()
@@ -468,11 +468,11 @@ old_pay() {
   autodescription="${autodescription%??} purchase with ${pay_with##*:}"
   description=${autodescription:=$description}
 
-	echo -e "$when  $description"
+  echo -e "$when  $description"
   for line in "${expenselines[@]}"; do
     echo -e "  $line"
   done
-	echo -e "  $pay_with"
+  echo -e "  $pay_with"
 
   if [[ $autoconfirm != "true" ]]; then
     read -p "Confirm? (y/n):" yn
@@ -486,45 +486,45 @@ old_pay() {
     esac
   fi
 
-	echo >> $DB_DATAFILE
-	echo -e "$when  $description" >> $DB_DATAFILE
+  echo >> $DB_DATAFILE
+  echo -e "$when  $description" >> $DB_DATAFILE
   for line in "${expenselines[@]}"; do
     echo -e "  $line" >> $DB_DATAFILE
   done
-	echo -e "  $pay_with" >> $DB_DATAFILE
+  echo -e "  $pay_with" >> $DB_DATAFILE
 }
 
 show_last() {
-	if [[ $PLATFORM == "darwin" ]]; then
-		tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r
-	elif [[ $PLATFORM == "linux" ]]; then
-		tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac
-	else
-		echo "Your platform is not supported yet."
-		exit 1
-	fi
+  if [[ $PLATFORM == "darwin" ]]; then
+    tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r
+  elif [[ $PLATFORM == "linux" ]]; then
+    tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac
+  else
+    echo "Your platform is not supported yet."
+    exit 1
+  fi
 }
 
 undo_last() {
-	local lines
-	if [[ $PLATFORM == "darwin" ]]; then
-		lines=`tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r | wc -l`
-	elif [[ $PLATFORM == "linux" ]]; then
-		lines=`tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac | wc -l`
-	else
-		echo "Your platform is not supported yet."
-		exit 1
-	fi
+  local lines
+  if [[ $PLATFORM == "darwin" ]]; then
+    lines=`tail -r $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tail -r | wc -l`
+  elif [[ $PLATFORM == "linux" ]]; then
+    lines=`tac $DB_DATAFILE | grep -E '^[0-9]+\/[0-9]+' -m 1 -B 20 | tac | wc -l`
+  else
+    echo "Your platform is not supported yet."
+    exit 1
+  fi
 
-	local i="0"
-	while [ $i -lt $lines ]; do
-		if [[ $PLATFORM == "darwin" ]]; then
-			sed -i '' -e '$ d' $DB_DATAFILE
-		elif [[ $PLATFORM == "linux" ]]; then
-			sed -i '$ d' $DB_DATAFILE
-		fi
-		i=$[$i+1]
-	done
+  local i="0"
+  while [ $i -lt $lines ]; do
+    if [[ $PLATFORM == "darwin" ]]; then
+      sed -i '' -e '$ d' $DB_DATAFILE
+    elif [[ $PLATFORM == "linux" ]]; then
+      sed -i '$ d' $DB_DATAFILE
+    fi
+    i=$[$i+1]
+  done
 }
 
 # Withdraw cash from the bank card
@@ -575,31 +575,31 @@ withdraw() {
 # Main
 case $1 in
 
-	"init")
-		init_db
-		;;
+  "init")
+    init_db
+    ;;
 
-	"flush")
-		flush_db
-		;;
+  "flush")
+    flush_db
+    ;;
 
-	"pay")
-		init_db
-		shift
-		pay "$@"
-		;;
+  "pay")
+    init_db
+    shift
+    pay "$@"
+    ;;
 
-	"last")
-		init_db
-		shift
-		show_last
-		;;
+  "last")
+    init_db
+    shift
+    show_last
+    ;;
 
-	"undo")
-		init_db
-		shift
-		undo_last
-		;;
+  "undo")
+    init_db
+    shift
+    undo_last
+    ;;
 
   "withdraw")
     init_db
@@ -607,45 +607,45 @@ case $1 in
     withdraw "$@"
     ;;
     
-	"set-alias")
-		init_db
-		shift
-		set_alias "$@"
-		;;
+  "set-alias")
+    init_db
+    shift
+    set_alias "$@"
+    ;;
 
-	"rm-alias")
-		init_db
-		shift
-		rm_alias "$@"
-		;;
+  "rm-alias")
+    init_db
+    shift
+    rm_alias "$@"
+    ;;
 
-	"show-alias")
-		init_db
-		if [[ -z $2 ]]; then
-			cat $CONFIG_FILE | less
-		else
-			get_alias $2
-		fi
-		;;
+  "show-alias")
+    init_db
+    if [[ -z $2 ]]; then
+      cat $CONFIG_FILE | less
+    else
+      get_alias $2
+    fi
+    ;;
 
-	"exec")
-		init_db
-		shift
-		ledger -f $DB_DATAFILE "$@"
-		;;
+  "exec")
+    init_db
+    shift
+    ledger -f $DB_DATAFILE "$@"
+    ;;
 
-	"print")
-		echo -e "Dataset:\t$DB_DATAFILE"
-		echo -e "Configuration:\t$CONFIG_FILE"
-		;;
+  "print")
+    echo -e "Dataset:\t$DB_DATAFILE"
+    echo -e "Configuration:\t$CONFIG_FILE"
+    ;;
 
   "version"|"-v"|"-V")
     echo "highled v$VERSION"
     ;;
 
-	*)
-		print_usage
-		exit
+  *)
+    print_usage
+    exit
 esac
 
 }
