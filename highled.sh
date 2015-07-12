@@ -167,19 +167,19 @@ set_alias() {
 # checks if input string has currency and if not
 # appends default currency
 resolve_amount_with_currency() {
-  local amount_with_currency=$1
-	local amount=${amount_with_currency//[^0-9.,]/}
-	local currency=${amount_with_currency//[0-9.,]/}
+  local __amount_with_currency=$1
+	local __amount=${__amount_with_currency//[^0-9.,]/}
+	local __currency=${__amount_with_currency//[0-9., ]/}
 
-  get_alias "default_currency" default_currency
-  currency=${default_currency:=$currency}
+  get_alias "default_currency" __default_currency
+  __currency=${__currency:=$__default_currency}
 
-  local val="$amount $currency"
+  local __val="$__amount $__currency"
 	local __amount_currency=$2
 	if [[ "$__amount_currency" ]]; then
-    eval $__amount_currency="'$val'"
+    eval $__amount_currency="'$__val'"
   else
-    echo "$val"
+    echo "$__val"
   fi
 }
 
@@ -264,12 +264,11 @@ pay() {
     shift
   done
 
-	get_alias $description resolved_description
+	get_alias "$description" resolved_description
 	description=${resolved_description:=$description}
 
   local expenselines=()
   local autodescription
-  # echo "$when  $description" > $TRANSACTION_FILE
 
   while [[ true ]]; do
     read -p "Debit: " debit
@@ -279,18 +278,16 @@ pay() {
     
     local expense=${debit%% *}
     local amount_with_currency=${debit#* }
+    echo "amount_with_currency: $amount_with_currency"
 
-    resolve_amount_with_currency $amount_with_currency resolved_amount
-    resolve_expense $expense resolved_expense
-
-    if [[ -z $amount ]] || [[ -z $resolved_amount ]]; then
+    if [[ -z $amount_with_currency ]]; then
       echo "Specify payment amount."
       echo $usage
       exit 1
     fi	
-    
-	  get_alias $expense resolved_expense
-	  expense=${resolved_expense:=$expense}
+
+    resolve_amount_with_currency "$amount_with_currency" resolved_amount
+    resolve_expense "$expense" resolved_expense
 
     expenselines+=("$expense\t\t$resolved_amount")
 
@@ -305,7 +302,7 @@ pay() {
   fi
 
   local method=$credit
-  resolve_payment_method $method resolved_method
+  resolve_payment_method "$method" resolved_method
 
   autodescription="${autodescription%??} purchase with ${resolved_method##*:}"
   description=${description:=$autodescription}
