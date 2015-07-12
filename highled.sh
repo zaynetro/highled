@@ -7,6 +7,8 @@ YEAR=`date "+%Y"`
 DB_DIR=./.highled
 CONFIG_FILE="$DB_DIR/config"
 DB_DATAFILE="$DB_DIR/$YEAR-balance.ldg"
+TRANSACTION_FILE="$DB_DIR/transaction.ldg"
+DB_TMPFILE="$DB_DIR/tmp.ldg"
 
 case $OSTYPE in
 	"darwin"*)
@@ -172,6 +174,9 @@ set_alias() {
 	echo "$key=$value" >> $CONFIG_FILE
 }
 
+# Resolves string with amount and currency
+# checks if input string has currency and if not
+# appends default currency
 resolve_amount_with_currency() {
   local amount_with_currency=$1
 	local amount=${amount_with_currency//[^0-9.,]/}
@@ -189,7 +194,164 @@ resolve_amount_with_currency() {
   fi
 }
 
+# Resolves expense string using alias
+# TODO: capitalize first letters
+resolve_expense() {
+  local __expense=$1
+  get_alias $__expense __resolved
+
+  if [[ -z $__resolved ]]; then
+    __resolved=$__expense
+
+    if [[ ! $__resolved =~ "Expenses:.*" ]]; then
+      __resolved="Expenses:"$__resolved
+    fi
+  fi
+
+  local __return_var=$2
+  if [[ "$__return_var" ]]; then
+    eval $__return_var="'$__resolved'"
+  else
+    echo "$__resolved"
+  fi
+}
+
+# Resolves payment method by getting alias
+resolve_payment_method() {
+  local __method=$1
+  get_alias $__method __resolved
+
+  local __return_var=$2
+  if [[ "$__return_var" ]]; then
+    eval $__return_var="'$__resolved'"
+  else
+    echo "$__resolved"
+  fi
+}
+
 pay() {
+  # Usage:  highled pay [<flags>] [<date>] [-d <description>]
+
+  local usage="Usage: highled pay [<flags>] [<date>] [-d <description>]"
+  local autoconfirm
+  local noalias
+  local description
+	local when=`date "+%Y/%m/%d"`
+
+  # Parse command
+  while [[ $# -gt 0 ]]; do
+    local key=$1
+    
+    case $key in
+      "-y")
+        autoconfirm="true"
+        ;;
+
+      "-nas"|"--no-alias")
+        noalias="true"
+        ;;
+
+      "-d")
+        description="$2"
+        shift
+        ;;
+
+      "yesterday")
+				when=`date -v-1d "+%Y/%m/%d"`
+				;;
+
+			*)
+				if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
+					when=$key
+				else
+					echo "Illegal date: $key"
+					echo "Use form YYYY/MM/DD or \"yesterday\" instead"
+					exit 1
+				fi
+				;;				
+
+    esac
+ 
+    shift
+  done
+
+	get_alias $description resolved_description
+	description=${resolved_description:=$description}
+
+  local expenselines=()
+  local autodescription
+  # echo "$when  $description" > $TRANSACTION_FILE
+
+  while [[ true ]]; do
+    read -p "Debit: " debit
+    if [[ -z $debit ]]; then
+      break
+    fi
+    
+    local expense=${debit%% *}
+    local amount_with_currency=${debit#* }
+
+    resolve_amount_with_currency $amount_with_currency resolved_amount
+    resolve_expense $expense resolved_expense
+
+    if [[ -z $amount ]] || [[ -z $resolved_amount ]]; then
+      echo "Specify payment amount."
+      echo $usage
+      exit 1
+    fi	
+    
+	  get_alias $expense resolved_expense
+	  expense=${resolved_expense:=$expense}
+
+    expenselines+=("$expense\t\t$resolved_amount")
+
+    autodescription+="${expense##*:}, "
+  done
+
+  read -p "Credit: " credit
+  if [[ -z $credit ]]; then
+    echo "Specify at least one credit."
+    echo $usage
+    exit 1
+  fi
+
+  local method=$credit
+  resolve_payment_method $method resolved_method
+
+  autodescription="${autodescription%??} purchase with ${resolved_method##*:}"
+  description=${description:=$autodescription}
+
+	echo -e "$when  $description" > $TRANSACTION_FILE
+  for line in "${expenselines[@]}"; do
+    echo -e "  $line" >> $TRANSACTION_FILE
+  done
+	echo -e "  $resolved_method" >> $TRANSACTION_FILE
+
+  cat $TRANSACTION_FILE
+
+  # TODO: add option to modify transaction file
+  if [[ $autoconfirm != "true" ]]; then
+    read -p "Confirm (y/n):" yn
+    case $yn in
+      [Yy])
+        ;;
+
+      *)
+        echo "Cancelling..."
+        exit
+    esac
+  fi
+
+  # TODO: check transaction file syntax
+  cat $DB_DATAFILE > $DB_TMPFILE
+  echo >> $DB_TMPFILE
+  cat $TRANSACTION_FILE >> $DB_TMPFILE
+  cat $DB_TMPFILE > $DB_DATAFILE
+  rm $DB_TMPFILE
+  rm $TRANSACTION_FILE
+}
+
+old_pay() {
   # Usage:   highled pay [<flags>] [<amount> for <expense>] with <what> [<date>] [-d <description>]
   # Example: highled pay -y 10 for Lunch with visa yesterday
 
