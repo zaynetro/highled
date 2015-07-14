@@ -218,40 +218,34 @@ resolve_payment_method() {
   fi
 }
 
-pay() {
-  # Usage:  highled pay [<flags>] [<date>] [-d <description>]
+# Parses pay command flags
+parse_flags() {
+  flag_when=`date "+%Y/%m/%d"`
 
-  local usage="Usage: highled pay [<flags>] [<date>] [-d <description>]"
-  local autoconfirm
-  local noalias
-  local description
-  local when=`date "+%Y/%m/%d"`
-
-  # Parse command
   while [[ $# -gt 0 ]]; do
     local key=$1
     
     case $key in
       "-y")
-        autoconfirm="true"
+        flag_autoconfirm="true"
         ;;
 
       "-nas"|"--no-alias")
-        noalias="true"
+        flag_noalias="true"
         ;;
 
       "-d")
-        description="$2"
+        flag_description="$2"
         shift
         ;;
 
       "yesterday")
-        when=`date -v-1d "+%Y/%m/%d"`
+        flag_when=`date -v-1d "+%Y/%m/%d"`
         ;;
 
       *)
         if [[ $key =~ ^[0-9]+(\/[0-9]+)+$ ]]; then
-          when=$key
+          flag_when=$key
         else
           echo "Illegal date: $key"
           echo "Use form YYYY/MM/DD or \"yesterday\" instead"
@@ -263,9 +257,43 @@ pay() {
  
     shift
   done
+}
 
-  get_alias "$description" resolved_description
-  description=${resolved_description:=$description}
+# Appends transaction file to the balance sheet
+make_transaction() {
+  cat $TRANSACTION_FILE
+
+  # TODO: add option to modify transaction file
+  if [[ $flag_autoconfirm != "true" ]]; then
+    read -p "Confirm (y/n):" yn
+    case $yn in
+      [Yy])
+        ;;
+
+      *)
+        echo "Cancelling..."
+        exit
+    esac
+  fi
+
+  # TODO: check transaction file syntax
+  cat $DB_DATAFILE > $DB_TMPFILE
+  echo >> $DB_TMPFILE
+  cat $TRANSACTION_FILE >> $DB_TMPFILE
+  cat $DB_TMPFILE > $DB_DATAFILE
+  rm $DB_TMPFILE
+  rm $TRANSACTION_FILE
+}
+
+pay() {
+  # Usage:  highled pay [<flags>] [<date>] [-d <description>]
+  local usage="Usage: highled pay [<flags>] [<date>] [-d <description>]"
+
+  # Parse flags
+  parse_flags "$@"
+
+  get_alias "$flag_description" resolved_description
+  description=${resolved_description:=$flag_description}
 
   local expenselines=()
   local autodescription
@@ -306,34 +334,57 @@ pay() {
   autodescription="${autodescription%??} purchase with ${resolved_method##*:}"
   description=${description:=$autodescription}
 
-  echo -e "$when  $description" > $TRANSACTION_FILE
+  echo -e "$flag_when  $description" > $TRANSACTION_FILE
   for line in "${expenselines[@]}"; do
     echo -e "  $line" >> $TRANSACTION_FILE
   done
   echo -e "  $resolved_method" >> $TRANSACTION_FILE
 
-  cat $TRANSACTION_FILE
+  make_transaction
+}
 
-  # TODO: add option to modify transaction file
-  if [[ $autoconfirm != "true" ]]; then
-    read -p "Confirm (y/n):" yn
-    case $yn in
-      [Yy])
-        ;;
+income() {
+  local usage="Usage: highled income [flags]"
 
-      *)
-        echo "Cancelling..."
-        exit
-    esac
-  fi
+  parse_flags
 
-  # TODO: check transaction file syntax
-  cat $DB_DATAFILE > $DB_TMPFILE
-  echo >> $DB_TMPFILE
-  cat $TRANSACTION_FILE >> $DB_TMPFILE
-  cat $DB_TMPFILE > $DB_DATAFILE
-  rm $DB_TMPFILE
-  rm $TRANSACTION_FILE
+  local autodescription="Income to: "
+  local methodlines=()
+  
+  while [[ true ]]; do
+    read -p "To: " to
+    if [[ -z $to ]]; then
+      break
+    fi
+
+    local method=${to%% *}
+    local amount_with_currency=${to#* }
+
+    if [[ -z $amount_with_currency ]]; then
+      echo "Specify payment amount."
+      echo $usage
+      exit 1
+    fi  
+
+    resolve_amount_with_currency "$amount_with_currency" resolved_amount
+    resolve_payment_method "$method" resolved_method
+
+    methodlines+=("$resolved_method\t\t$resolved_amount")
+    autodescription+="${resolved_method##*:}, "
+
+  done
+
+  autodescription="${autodescription%??}" 
+  description=${description:=$autodescription}
+
+  echo -e "$flag_when  $description" > $TRANSACTION_FILE
+  for line in "${methodlines[@]}"; do
+    echo -e "  $line" >> $TRANSACTION_FILE
+  done
+  echo -e "  Income:Salary" >> $TRANSACTION_FILE
+
+  make_transaction
+
 }
 
 show_last() {
@@ -441,6 +492,12 @@ case $1 in
     init_db
     shift
     undo_last
+    ;;
+
+  "income")
+    init_db
+    shift
+    income "$@"
     ;;
 
   "withdraw")
