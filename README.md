@@ -18,10 +18,10 @@ Highled - higher level ledger
 Usage:
   highled init                 Configure highled (will be run once before any other command)
   highled flush                Remove all files created by highled
-  highled pay <options>        Make a payment transaction (see detailed description below)
+  highled pay <flags>          Make a payment transaction (see detailed description below)
   highled last                 Print last transaction
   highled undo                 Remove last transaction
-  highled withdraw <options>   Withdraw money from bank card (see below)
+  highlead income <flags>      Similar to payment but withdraws money from income salary
   highled set-alias <k> <v>    Set alias value <v> for the key <k>
   highled rm-alias <k>         Remove alias for the key <k>
   highled show-alias <k>       Print alias value for the key <k>, if <k> omitted print all
@@ -30,26 +30,11 @@ Usage:
   highled {version|-v|-V}      Print highled version
 
 Payment:
- highled pay [flags] [<amount> for <expense>] with <what> [<date>] [-d <description>]
+ highled pay [flags] [<date>] [-d <description>]
  Flags:
    -y             Auto-confirm transaction
-   --no-alias     Don't try to resolve aliases
-   -nas           Shorthand for --no-alias
 
-Withdrawal:
- highled withdraw [flags] <amount> from <where> [<date>] [-d <description>]
- Flags: (the same as for payment)
-
-Examples:
-  $ highled pay 11.50 for Lunch with visa
-  2015/06/20  Lunch purchase with Visa
-    Expenses:Lunch      11.50 EUR
-    Liabilities:Visa
-
-  $ highled pay 34 for Food with cash yesterday -d "Chinatown dinner"
-  2015/06/19  Food:Fastfood purchase with Cash
-    Expenses:Food:Fastfood      34 EUR
-    Assets:Cash
+ If -y flag is not specified every transation will be printed on the screen for confirmation
 ```
 
 
@@ -80,7 +65,7 @@ TO BE DONE
   * <s>Understand multiple expenses within one transaction</s>
   * Provide `--no-alias` flag
   * <s>Transaction confirmation</s>
-* Income command
+* <s>Income command</s>
   * Calls payment method
 * Withdraw command
   * **Just call payment method** with specific arguments
