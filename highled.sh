@@ -288,7 +288,7 @@ pay() {
     resolve_amount_with_currency "$amount_with_currency" resolved_amount
     resolve_expense "$expense" resolved_expense
 
-    expenselines+=("$expense\t\t$resolved_amount")
+    expenselines+=("$resolved_expense\t\t$resolved_amount")
 
     autodescription+="${expense##*:}, "
   done
