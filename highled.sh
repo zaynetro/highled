@@ -420,51 +420,6 @@ undo_last() {
   done
 }
 
-# Withdraw cash from the bank card
-withdraw() {
-  local usage="Usage: highled withdraw 10 from visa"
-
-  if [[ $2 != "from" ]]; then
-    echo "Missing \"from\""
-    echo $usage
-    exit 1
-  fi
-
-  local resolved_amount=""
-  resolve_amount_with_currency $1 resolved_amount
-
-  if [[ -z $resolved_amount ]]; then
-    echo "Specify amount."
-    echo $usage
-    exit 1
-  fi
-
-  local from=$3
-  local when=`date "+%Y/%m/%d"`
-
-  get_alias $from resolved_from
-  from=${resolved_from:=$from}
-
-  echo -e "$when  ATM"
-  echo -e "  Expenses:Cash\t\t$resolved_amount"
-  echo -e "  $from"
-
-  read -p "Confirm? (y/n):" yn
-  case $yn in
-    [Yy])
-      ;;
-    *)
-      echo "Cancelling..."
-      exit
-      ;;
-  esac
-
-  echo >> $DB_DATAFILE
-  echo -e "$when  ATM" >> $DB_DATAFILE
-  echo -e "  Expenses:Cash\t\t$resolved_amount" >> $DB_DATAFILE
-  echo -e "  $from" >> $DB_DATAFILE
-}
-
 # Main
 case $1 in
 
@@ -498,12 +453,6 @@ case $1 in
     init_db
     shift
     income "$@"
-    ;;
-
-  "withdraw")
-    init_db
-    shift
-    withdraw "$@"
     ;;
     
   "set-alias")
