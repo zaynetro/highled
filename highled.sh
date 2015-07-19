@@ -37,6 +37,7 @@ Usage:
   highled show-alias <k>       Print alias value for the key <k>, if <k> omitted print all
   highled exec <options>       Execute ledger with highled balance file and <options>
   highled print                Print dataset and config file locations
+  highled tips                 Print useful ledger commands
   highled {version|-v|-V}      Print highled version
 
 Payment:
@@ -416,6 +417,21 @@ undo_last() {
   done
 }
 
+print_tips() {
+  read -r -d '' output << EOM
+
+Useful commands:
+  highled exec -p "july" bal        Show balance for July
+  highled exec -p "until june" bal  Show balance until June
+  highled exec bal assets:cash      Provide balance for account type
+  highled exec reg assets:cash      Provide transactions for account
+  highled exec -S T bal Expenses    Sort expenses by total
+
+EOM
+
+  echo "$output" 
+}
+
 # Main
 case $1 in
 
@@ -481,6 +497,11 @@ case $1 in
   "print")
     echo -e "Dataset:\t$DB_DATAFILE"
     echo -e "Configuration:\t$CONFIG_FILE"
+    ;;
+
+  "tips")
+    print_tips
+    exit
     ;;
 
   "version"|"-v"|"-V")
